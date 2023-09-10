@@ -3,7 +3,8 @@ import { TodoStateContext, TodoNextIdContext, TodoDispatchContext, TodoDateConte
 import { DateStateContext, DateDispatchContext } from '../DateContext';
 import { format } from 'date-fns';
 import { BsCheckCircleFill, BsCircle } from 'react-icons/bs';
-import { AiFillPlusCircle } from 'react-icons/ai';
+import { AiFillPlusCircle, AiFillEdit } from 'react-icons/ai';
+import { RiDeleteBin2Fill} from 'react-icons/ri';
 import styles from './TodoList.module.css';
 import axios from "axios";
 
@@ -136,14 +137,15 @@ const TodoItemNew = ({ id, done, text }) => {
 
     // 할 일 완료/해제
     const onToggle = () => {
-        dispatch({ type: 'TOGGLE', id })
-        // axios.post('/api/main/todo/check',{
-        //     checked:done, 
-        //     todo_id:id, 
-        //     todo_date:{
-        //         year: format(date, 'yyyy'),
-        //         month: format(date, 'M')}
-        // });
+        dispatch({ type: 'TOGGLE', id });
+        axios.post('/api/main/todo/check', {
+            checked: !done,
+            todo_id: id,
+            todo_date: {
+                year: format(date, 'yyyy'),
+                month: format(date, 'M')
+            }
+        });
     };
 
     if (done === true) {
@@ -155,6 +157,21 @@ const TodoItemNew = ({ id, done, text }) => {
     // 할 일 삭제
     const onRemove = () => {
         dispatch({ type: 'REMOVE', id });
+        axios.delete('/api/main/todo', {
+            data: {
+            todo_id: id,
+            todo_date: {
+                year: format(date, 'yyyy'),
+                month: format(date, 'M')
+            }}
+        })
+            .then((response) => {
+                console.log('[id]', id);
+                console.log(response.data);
+            })
+            .catch((error) => {
+                console.log(error);
+            })
     }
 
     return (
@@ -165,8 +182,11 @@ const TodoItemNew = ({ id, done, text }) => {
             <div className={styles.text}>
                 {text}
             </div>
+            <div className={styles.remove}>
+               <AiFillEdit size="13px"></AiFillEdit>
+            </div>
             <div className={styles.delete} onClick={onRemove}>
-                삭제
+               <RiDeleteBin2Fill size="13px"></RiDeleteBin2Fill>
             </div>
         </div>
     );
@@ -181,11 +201,12 @@ export default function TodoList({}) {
     const dispatch = useContext(TodoDispatchContext);
     const date = useContext(DateStateContext);
 
-    console.log('[todoState]', todoState);
+    
 
     useEffect(() => {
         getCategories();
         getInfo();
+        console.log('[todoState]', todoState);
     }, [todoState]);
 
     useEffect(() => {
@@ -211,21 +232,22 @@ export default function TodoList({}) {
 
     async function getInfo() {
         let userId = '';
-        // let year = parseInt(format(date, 'yyyy'));
-        // let month = parseInt(format(date, 'M'));
+        let year = '';
+        let month = '';
 
         await axios
             .get('/api/main')
             .then((response) => {
                 userId = response.data.userId;
+                year = parseInt(format(date, 'yyyy'));
+                month = parseInt(format(date, 'M'));
             })
             .catch((error)=>{
                 console.log(error);
             })
 
         await axios
-            // 미완성: 날짜 동적으로 바꾸기
-            .get(`/api/main/todo?userId=${userId}&year=2023&month=8`)
+            .get(`/api/main/todo?userId=${userId}&year=${year}&month=${month}}`)
             .then((response) => {
                 setInfo(response.data);
             })

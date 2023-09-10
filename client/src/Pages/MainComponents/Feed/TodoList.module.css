@@ -56,8 +56,13 @@
     font-size: 0.9rem;
 }
 
+.remove{
+    margin-right: 3%;
+    color: blue;
+    cursor: pointer;
+}
+
 .delete{
-    font-size: 0.5rem;
     color: red;
     cursor: pointer;
 }

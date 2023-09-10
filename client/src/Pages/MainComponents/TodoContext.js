@@ -54,7 +54,7 @@ export const TodoDateContext = createContext();
 
 export function TodoProvider({ children }) {
     const [state, dispatch] = useReducer(todoReducer, initialTodos);
-    const nextId = useRef(state.length);
+    const nextId = useRef(0);
 
     return (
         <TodoStateContext.Provider value={state}>
