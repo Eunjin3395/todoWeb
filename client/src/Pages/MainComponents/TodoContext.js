@@ -42,6 +42,10 @@ function todoReducer(state, action) {
             );
         case 'REMOVE': // 할 일 삭제
             return state.filter(todo => todo.id !== action.id);
+        case 'UPDATE':
+            return state.map(todo =>
+                todo.id === action.id ? { ...todo, text: action.update_text } : todo
+            );
         default:
             throw new Error(`Unhandled action type: ${action.type}`);
     }

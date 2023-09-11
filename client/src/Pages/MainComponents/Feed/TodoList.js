@@ -4,7 +4,7 @@ import { DateStateContext, DateDispatchContext } from '../DateContext';
 import { format } from 'date-fns';
 import { BsCheckCircleFill, BsCircle } from 'react-icons/bs';
 import { AiFillPlusCircle, AiFillEdit } from 'react-icons/ai';
-import { RiDeleteBin2Fill} from 'react-icons/ri';
+import { RiDeleteBin2Fill } from 'react-icons/ri';
 import styles from './TodoList.module.css';
 import axios from "axios";
 
@@ -25,7 +25,7 @@ const TodoHead = ({ cat_title, cat_id }) => {
 
         if (input_text === "") { // 입력이 공백인 경우
             SetIsFormed(false)
-        }else { // 입력값이 있는 경우
+        } else { // 입력값이 있는 경우
             dispatch({
                 type: 'CREATE',
                 todo: {
@@ -57,8 +57,6 @@ const TodoHead = ({ cat_title, cat_id }) => {
             SetInput_text('');
             SetIsFormed(false)
         }
-
-
     }
 
     const handleChange = (e) => {
@@ -72,7 +70,7 @@ const TodoHead = ({ cat_title, cat_id }) => {
             <form onSubmit={TodoCreate}>
                 <input type="text" autoFocus value={input_text} placeholder='입력 후 Enter' onChange={handleChange} className={styles.input_text} />
             </form>
-        </div>
+            </div>
     }
 
     const makeForm = () => {
@@ -91,47 +89,13 @@ const TodoHead = ({ cat_title, cat_id }) => {
     );
 }
 
-/*
-const TodoItem = ({ id, done, text }) => {
-    const todos = useContext(TodoStateContext);
-    const dispatch = useContext(TodoDispatchContext);
-    const nextId = useContext(TodoNextIdContext);
-
-    const onToggle = () => dispatch({ type: 'TOGGLE', id });
-    const onRemove = () => {
-        dispatch({ type: 'REMOVE', id });
-
-        nextId.current -= 1;
-    }
-
-    let icon = null;
-
-    if (done === true) {
-        icon = <BsCheckCircleFill size="19px" onClick={onToggle}></BsCheckCircleFill>
-    } else if (done === false) {
-        icon = <BsCircle size="19px" color="#BDBDBD" onClick={onToggle}></BsCircle>
-    }
-
-    return (
-        <div className={styles.todoItem_container}>
-            <div className={styles.checkBox}>
-                {icon}
-            </div>
-            <div className={styles.text}>
-                {text}
-            </div>
-            <div className={styles.delete} onClick={onRemove}>
-                삭제
-            </div>
-        </div>
-    );
-}
-*/
 
 // 할 일 항목 형태 정의
 const TodoItemNew = ({ id, done, text }) => {
     const date = useContext(DateStateContext);
     const dispatch = useContext(TodoDispatchContext);
+    const [update_text, SetUpdate_text] = useState(text);
+    const [update_mode, Setupdate_mode] = useState(false);
 
     let icon = null;
 
@@ -159,11 +123,12 @@ const TodoItemNew = ({ id, done, text }) => {
         dispatch({ type: 'REMOVE', id });
         axios.delete('/api/main/todo', {
             data: {
-            todo_id: id,
-            todo_date: {
-                year: format(date, 'yyyy'),
-                month: format(date, 'M')
-            }}
+                todo_id: id,
+                todo_date: {
+                    year: format(date, 'yyyy'),
+                    month: format(date, 'M')
+                }
+            }
         })
             .then((response) => {
                 console.log('[id]', id);
@@ -174,26 +139,69 @@ const TodoItemNew = ({ id, done, text }) => {
             })
     }
 
+    // 할 일 수정
+    const onChangeUpdateMode = () => {
+        Setupdate_mode(true);
+    }
+
+    const handleChange = (e) => {
+        SetUpdate_text(e.target.value);
+    }
+
+    const onUpdate = (e) => {
+        e.preventDefault();
+
+        SetUpdate_text(text);
+        dispatch({ type: 'UPDATE', id, update_text });
+        Setupdate_mode(false);
+
+        axios.put('/api/main/todo', {
+            todo_id: id,
+            todo_text: update_text,
+            todo_date: {
+                year: format(date, 'yyyy'),
+                month: format(date, 'M')
+            }
+        })
+            .then((response) => {
+                console.log('[update result]');
+                console.log(response.data);
+            })
+            .catch((error) => {
+                console.log(error);
+            })
+    }
+
+    // 텍스트 영역 형태 정의: 읽기 모드 or 수정 모드
+    let text_form = '';
+    if(update_mode){
+        text_form = <form onSubmit={onUpdate}>
+                        <input type="text" autoFocus value={update_text} onChange={handleChange} className={styles.input_text} />
+                    </form>
+    }else{
+        text_form = <div className={styles.text}>
+                        {text}
+                    </div>
+    }
+
     return (
         <div className={styles.todoItem_container}>
             <div className={styles.checkBox}>
                 {icon}
             </div>
-            <div className={styles.text}>
-                {text}
-            </div>
-            <div className={styles.remove}>
-               <AiFillEdit size="13px"></AiFillEdit>
+            {text_form}   
+            <div className={styles.update} onClick={onChangeUpdateMode}>
+                <AiFillEdit size="13px"></AiFillEdit>
             </div>
             <div className={styles.delete} onClick={onRemove}>
-               <RiDeleteBin2Fill size="13px"></RiDeleteBin2Fill>
+                <RiDeleteBin2Fill size="13px"></RiDeleteBin2Fill>
             </div>
         </div>
     );
 }
 
 
-export default function TodoList({}) {
+export default function TodoList({ }) {
     const [categories, setCategories] = useState([]);
     const [info, setInfo] = useState('');
 
@@ -201,7 +209,7 @@ export default function TodoList({}) {
     const dispatch = useContext(TodoDispatchContext);
     const date = useContext(DateStateContext);
 
-    
+
 
     useEffect(() => {
         getCategories();
@@ -242,7 +250,7 @@ export default function TodoList({}) {
                 year = parseInt(format(date, 'yyyy'));
                 month = parseInt(format(date, 'M'));
             })
-            .catch((error)=>{
+            .catch((error) => {
                 console.log(error);
             })
 
